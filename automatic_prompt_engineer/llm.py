@@ -4,6 +4,7 @@ import os
 import time
 from tqdm import tqdm
 from abc import ABC, abstractmethod
+from openai import OpenAI
 
 import openai
 
@@ -43,7 +44,7 @@ class LLM(ABC):
         """Returns the log probs of the text.
         Parameters:
             text: The text to get the log probs of. This can be a string or a list of strings.
-            log_prob_range: The range of characters within each string to get the log_probs of. 
+            log_prob_range: The range of characters within each string to get the log_probs of.
                 This is a list of tuples of the form (start, end).
         Returns:
             A list of log probs.
@@ -157,8 +158,22 @@ class GPT_Forward(LLM):
         response = None
         while response is None:
             try:
-                response = openai.Completion.create(
-                    **config, prompt=prompt)
+                #response = openai.Completion.create(**config, prompt=prompt)
+                #response = openai.ChatCompletion.create(**config, prompt=prompt)
+                client = OpenAI(
+                    # This is the default and can be omitted
+                    api_key=os.environ.get("OPENAI_API_KEY"),
+                )
+
+                chat_completion = client.chat.completions.create(
+                    messages=[
+                        {
+                            "role": "user",
+                            "content": "Say this is a test",
+                        }
+                    ],
+                    model="gpt-3.5-turbo",
+                )
             except Exception as e:
                 if 'is greater than the maximum' in str(e):
                     raise BatchSizeException()
